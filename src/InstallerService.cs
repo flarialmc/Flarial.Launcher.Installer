@@ -3,6 +3,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Management.Deployment;
+using static Windows.Foundation.AsyncStatus;
 
 namespace Flarial.Launcher.Installer;
 
@@ -41,10 +42,9 @@ static class InstallerService
 
             info.Completed += (sender, args) => handle.Set();
             info.Progress += (sender, args) => callback((int)args.percentage);
-            handle.Wait();
 
-            if (info.ErrorCode is { })
-                throw info.ErrorCode;
+            handle.Wait();
+            if (info.Status is Error) throw info.ErrorCode;
         }
         finally
         {
