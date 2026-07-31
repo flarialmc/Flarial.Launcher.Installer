@@ -1,0 +1,72 @@
+name: Workflow
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps: 
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Verify
+        shell: pwsh
+        run: |
+          $Message = "${{ github.event.head_commit.message }}"
+          
+          if ($Message -notlike 'release:*') 
+          { 
+              Write-Host "Not a release commit, cancelling."
+              gh run cancel "${{ github.run_id }}"
+              gh run watch "${{ github.run_id }}"
+              exit 0 
+          }
+
+          Write-Host "A release commit, proceeding."
+
+      - name: .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: latest
+        
+      - name: Build
+        shell: pwsh
+        run: |
+          dotnet publish "src/Flarial.Launcher.Installer.csproj"
+  
+      - name: Token
+        uses: actions/create-github-app-token@v3
+        id: token
+        with:
+          client-id: ${{ secrets.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: flarialmc
+          repositories: newcdn
+
+      - name: CDN
+        uses: actions/checkout@v7
+        with:
+          repository: 'flarialmc/newcdn'
+          ref: 'main'
+          path: 'cdn'
+          token: ${{ steps.token.outputs.token }}
+
+      - name: Deploy
+        shell: pwsh
+        run: |
+          $Path = "$(Get-Location)\src\bin\Release\publish\Flarial.Launcher.Installer.exe"
+          Move-Item "$Path" "cdn\launcher\Flarial.Launcher.Installer.exe" -Force
+
+          Set-Location "cdn"
+
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@example.com"
+
+          git add "launcher\Flarial.Launcher.Installer.exe"
+          git commit -m "Update Launcher Installer"
+          git push

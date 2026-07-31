@@ -13,6 +13,8 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -37,7 +39,7 @@
     <AssemblyTitle>Flarial Launcher Installer</AssemblyTitle>
 
     <Company>Flarial</Company>
-    <Product>Flarial Launcher Installer</Product>
+    <Product>Launcher Installer</Product>
     <Copyright>Copyright (C) 2026 Flarial</Copyright>
 
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
