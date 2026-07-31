@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -52,11 +53,9 @@ sealed class MainWindow : Window
         Canvas.SetTop(_textBlock2, 84);
         Canvas.SetLeft(_progressBar, 11);
         Canvas.SetTop(_progressBar, 46);
-
-        Closing += OnClosing;
     }
 
-    void OnClosing(object sender, CancelEventArgs args)
+    protected override void OnClosing(CancelEventArgs args)
     {
         args.Cancel = true;
     }
@@ -76,7 +75,12 @@ sealed class MainWindow : Window
             }
         }));
 
-        Closing -= OnClosing;
-        _textBlock2.Text = "Installed.";
+        using (Process.Start(new ProcessStartInfo
+        {
+            UseShellExecute= true,
+            FileName= @"shell:appsFolder\Flarial.Launcher_0jrgakbnj75vr!App"
+        })) { }
+
+        Environment.Exit(0);
     }
 }
