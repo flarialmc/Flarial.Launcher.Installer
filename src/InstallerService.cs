@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -13,12 +14,8 @@ namespace Flarial.Launcher.Installer;
 static class InstallerService
 {
     static readonly PackageManager s_manager = new();
-
-    static readonly AddPackageOptions s_options = new()
-    {
-        ForceAppShutdown = true,
-        ForceUpdateFromAnyVersion = true
-    };
+    static readonly string s_path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+    static readonly AddPackageOptions s_options = new() { ForceAppShutdown = true, ForceUpdateFromAnyVersion = true };
 
     const string LauncherPackageUri = "https://cdn.flarial.xyz/launcher/Flarial.Launcher.msix";
     const string LauncherCertificateUri = "https://cdn.flarial.xyz/launcher/Flarial.Launcher.cer";
@@ -56,9 +53,15 @@ static class InstallerService
         }
     });
 
+
+    internal static Task DownloadPackageAsync(Action<int> callback)
+    {
+        return HttpService.DownloadAsync(LauncherPackageUri, s_path, callback);
+    }
+
     internal static Task InstallPackageAsync(Action<int> callback) => Task.Run(() =>
     {
-        var info = s_manager.AddPackageByUriAsync(new(LauncherPackageUri), s_options);
+        var info = s_manager.AddPackageByUriAsync(new(s_path), s_options);
         try
         {
             using ManualResetEventSlim handle = new();

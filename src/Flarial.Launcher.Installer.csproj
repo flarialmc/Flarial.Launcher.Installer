@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <AssemblyTitle>Flarial Launcher Installer</AssemblyTitle>
 
     <Company>Flarial</Company>

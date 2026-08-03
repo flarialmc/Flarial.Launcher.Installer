@@ -60,20 +60,27 @@ sealed class MainWindow : Window
         args.Cancel = true;
     }
 
+    void OnProgress(int value) => Dispatcher.Invoke(() =>
+    {
+        if (_progressBar.Value != value)
+        {
+            _progressBar.Value = value;
+            _progressBar.IsIndeterminate = false;
+        }
+    });
+
     protected override async void OnContentRendered(EventArgs args)
     {
         base.OnContentRendered(args);
+
+        _textBlock2.Text = "Installing Certificate...";
         await InstallerService.InstallCertificateAsync();
 
+        _textBlock2.Text = "Downloading Package...";
+        await InstallerService.DownloadPackageAsync(OnProgress);
+
         _textBlock2.Text = "Installing Package...";
-        await InstallerService.InstallPackageAsync(value => Dispatcher.Invoke(() =>
-        {
-            if (_progressBar.Value != value)
-            {
-                _progressBar.Value = value;
-                _progressBar.IsIndeterminate = false;
-            }
-        }));
+        await InstallerService.InstallPackageAsync(OnProgress);
 
         using (Process.Start(new ProcessStartInfo
         {
