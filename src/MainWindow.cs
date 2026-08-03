@@ -77,8 +77,8 @@ sealed class MainWindow : Window
 
         using (Process.Start(new ProcessStartInfo
         {
-            UseShellExecute= true,
-            FileName= @"shell:appsFolder\Flarial.Launcher_0jrgakbnj75vr!App"
+            UseShellExecute = true,
+            FileName = @"shell:appsFolder\Flarial.Launcher_0jrgakbnj75vr!App"
         })) { }
 
         Environment.Exit(0);

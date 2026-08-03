@@ -24,24 +24,36 @@ static class InstallerService
     const string LauncherCertificateUri = "https://cdn.flarial.xyz/launcher/Flarial.Launcher.cer";
     const string LauncherCertificateThumbprint = "080862035B63C6B01A1F7F5E2A286939808F502ADCA100BDCB6F805FB0DD4171";
 
+    static bool IsCertificateInstalled
+    {
+        get
+        {
+            using X509Store store = new(StoreName.TrustedPeople, StoreLocation.LocalMachine);
+            store.Open(OpenFlags.ReadOnly);
+
+            foreach (var certificate in store.Certificates)
+            {
+                var thumbprint = certificate.GetCertHashString(HashAlgorithmName.SHA256);
+                if (LauncherCertificateThumbprint.Equals(thumbprint, OrdinalIgnoreCase)) return true;
+            }
+
+            return false;
+        }
+    }
+
     internal static Task InstallCertificateAsync() => Task.Run(static async () =>
     {
-        using X509Store certificateStore = new(StoreName.TrustedPeople, StoreLocation.LocalMachine);
-        certificateStore.Open(OpenFlags.ReadWrite);
-
-        foreach (var installedCertificate in certificateStore.Certificates)
+        if (!IsCertificateInstalled)
         {
-            var installedCertificateThumbprint = installedCertificate.GetCertHashString(HashAlgorithmName.SHA256);
-            if (LauncherCertificateThumbprint.Equals(installedCertificateThumbprint, OrdinalIgnoreCase)) return;
+            using X509Certificate2 certificate = new(await HttpService.GetBytesAsync(LauncherCertificateUri));
+            var thumbprint = certificate.GetCertHashString(HashAlgorithmName.SHA256);
+
+            if (!thumbprint.Equals(LauncherCertificateThumbprint, OrdinalIgnoreCase))
+                throw new SecurityException("The launcher's remote thumbprint doesn't match the installer's local thumbprint.");
+
+            using X509Store store = new(StoreName.TrustedPeople, StoreLocation.LocalMachine);
+            store.Open(OpenFlags.ReadWrite); store.Add(certificate);
         }
-
-        using X509Certificate2 launcherCertificate = new(await HttpService.GetBytesAsync(LauncherCertificateUri));
-        var launcherCertificateFingerprint = launcherCertificate.GetCertHashString(HashAlgorithmName.SHA256);
-
-        if (!launcherCertificateFingerprint.Equals(LauncherCertificateThumbprint, OrdinalIgnoreCase))
-            throw new("The launcher's remote thumbprint doesn't match the installer's local thumbprint.");
-
-        certificateStore.Add(launcherCertificate);
     });
 
     internal static Task InstallPackageAsync(Action<int> callback) => Task.Run(() =>
