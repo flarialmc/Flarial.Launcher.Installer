@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -15,7 +16,13 @@ static class InstallerService
 {
     static readonly PackageManager s_manager = new();
     static readonly string s_path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-    static readonly AddPackageOptions s_options = new() { ForceAppShutdown = true, ForceUpdateFromAnyVersion = true };
+
+    static readonly AddPackageOptions s_options = new()
+    {
+        ForceAppShutdown = true,
+        ForceUpdateFromAnyVersion = true,
+        TargetVolume = s_manager.FindPackageVolumes().First(_ => _.IsSystemVolume)
+    };
 
     const string LauncherPackageUri = "https://cdn.flarial.xyz/launcher/Flarial.Launcher.msix";
     const string LauncherCertificateUri = "https://cdn.flarial.xyz/launcher/Flarial.Launcher.cer";
